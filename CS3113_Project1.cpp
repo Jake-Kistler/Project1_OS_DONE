@@ -5,6 +5,11 @@
 #include <queue>
 #include <limits> 
 
+// ** Global variables **
+int CPU_clock = 0; // global variable to keep track of CPU clock cycles
+int context_switch_time = 2; 
+int CPU_allocated_time = 5;
+
 
 struct PCB
 {
