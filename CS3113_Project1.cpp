@@ -10,6 +10,50 @@ int CPU_clock = 0; // global variable to keep track of CPU clock cycles
 int context_switch_time = 2; 
 int CPU_allocated_time = 5;
 
+/*
+* Project 2 is asking us to take the code from project 1 and modify it so that round robin scheduling is used 
+
+* What this means is that the input file has now changed as well as the way we handle the processes
+* From the project description:
+* 1): CPU Time Allocation and Timeouts 
+*   • A new parameter, CPUAllocated, specifies the number of CPU ticks a process can execute 
+    before it times out. 
+*   • If a process runs for more than CPUAllocated ticks without terminating or issuing an I/O 
+    operation (e.g., a print statement), it will be interrupted. 
+*   • The process is then moved to the back of the ReadyQueue, and a message is printed 
+    indicating a TimeOUT Interrupt. 
+
+* 2) Context Switch Handling 
+*    • A global CPU clock starts at 0 and increments based on: 
+    o The number of CPU ticks consumed by an instruction. 
+    o A new context switch time that accounts for the overhead of switching processes. 
+    o The CPU clock also increments by the context switch time when the ReadyQueue is empty.
+
+* 3) I/O Interrupts and I/O Waiting Queue 
+    • When a process executes a print instruction, it issues an IOInterrupt and moves to a new  queue called IOWaitingQueue. 
+    • The job status changes to IOWaiting. 
+    • The CPU clock time when the job was moved to the IOWaitingQueue is recorded. 
+    • Jobs are moved from IOWaitingQueue back to the ReadyQueue once they have spent  enough time in the I/O queue, determined by the print instruction's required CPU time. 
+    • The IOWaitingQueue is checked for job transfers every time an interrupt occurs in the CPU. 
+
+4. Process Execution Tracking 
+• Detailed output is required whenever a job moves from one queue to another, including: 
+    o ReadyQueue to Running 
+    o Running to IOWaitingQueue (for I/O operations) 
+    o Running to ReadyQueue (on timeout) 
+    o IOWaitingQueue to ReadyQueue (after I/O completion) 
+
+5. Process Termination Logging 
+• When a process terminates, log: 
+    o The CPU clock time when it first entered the Running state. 
+    o The CPU clock time when it reached the Terminated state. 
+    o The difference between these two times to track total execution time. 
+
+6. Total CPU Time Calculation 
+    • At the end of execution, print the total CPU time consumed by all processes.
+
+*/
+
 
 struct PCB
 {
