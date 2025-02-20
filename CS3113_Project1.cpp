@@ -3,12 +3,13 @@
 #include <string>
 #include <sstream>
 #include <queue>
-#include <limits> 
+#include <limits>
+#include <ctime> // for the clock 
 
 // ** Global variables **
 int CPU_clock = 0; // global variable to keep track of CPU clock cycles
-int context_switch_time = 2; 
-int CPU_allocated_time = 5;
+int context_switch_time = 2; // these need to be picked out of the file 
+int CPU_allocated_time = 5; // "                                      "
 
 /*
 * Project 2 is asking us to take the code from project 1 and modify it so that round robin scheduling is used 
@@ -17,7 +18,7 @@ int CPU_allocated_time = 5;
 * From the project description:
 * 1): CPU Time Allocation and Timeouts 
 *   • A new parameter, CPUAllocated, specifies the number of CPU ticks a process can execute 
-    before it times out. 
+    before it times out. (DONE- need to pick them out of the file DIF: EASY)
 *   • If a process runs for more than CPUAllocated ticks without terminating or issuing an I/O 
     operation (e.g., a print statement), it will be interrupted. 
 *   • The process is then moved to the back of the ReadyQueue, and a message is printed 
@@ -86,7 +87,7 @@ int main(int argc, char** argv)
     // TODO: Implement input parsing and populate newJobQueue
 
     // declare the variables to store the first two entires in a file
-    int maxMemory;
+    int max_memory;
     int num_processes;
 
     // declare the data structures to store the processes and main memory
@@ -95,10 +96,18 @@ int main(int argc, char** argv)
     std::queue<PCB> newJobQueue;
 
     // read in data from file
-    std::cin >> maxMemory;
+    std::cin >> max_memory;
+    std::cin >> context_switch_time;
+    std::cin >> CPU_allocated_time;
     std::cin >> num_processes;
 
-    mainMemory.resize(maxMemory, -1); // initialize main memory with -1 with size of maxMemory
+    std::cout << "max memory: " << max_memory << std::endl;
+    std::cout << "context switch time: " << context_switch_time << std::endl;
+    std::cout << "CPU allocated time: " << CPU_allocated_time << std::endl;
+    std::cout << "num processes: " << num_processes << std::endl;
+    
+
+    /* mainMemory.resize(max_memory, -1); // initialize main memory with -1 with size of maxMemory
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // this ignores any extra characters in the buffer namely the new line character, which would be picked up by the getline function in line 65
 
     /*
@@ -181,7 +190,7 @@ int main(int argc, char** argv)
 
     
     // Step 2: Load jobs into main memory
-    loadJobsToMemory(newJobQueue, readyQueue, mainMemory, maxMemory);
+    loadJobsToMemory(newJobQueue, readyQueue, mainMemory, max_memory);
 
     // print main memory
     for (int i = 0; i < mainMemory.size(); i++)
@@ -197,6 +206,7 @@ int main(int argc, char** argv)
         readyQueue.pop();
         executeCPU(PCB_start_address, mainMemory);
     }
+ 
 
     return 0;
 } // END OF MAIN
@@ -443,6 +453,7 @@ void executeCPU(int startAddress, std::vector<int>&  mainMemory)
     mainMemory[startAddress + 7] = register_value;
 
     // Print PCB information.
+    /*
     std::cout << "Process ID: " << process_id << "\n";
     std::cout << "State: TERMINATED\n";
     std::cout << "Program Counter: " << mainMemory[startAddress + 2] << "\n";
@@ -454,6 +465,7 @@ void executeCPU(int startAddress, std::vector<int>&  mainMemory)
     std::cout << "Max Memory Needed: " << max_memory_needed << "\n";
     std::cout << "Main Memory Base: " << main_memory_base << "\n";
     std::cout << "Total CPU Cycles Consumed: " << CPU_cycles_used << "\n";
+    */
 } // END FUNCTION
 
 void show_main_memory(std::vector<int> &mainMemory, int rows) 
