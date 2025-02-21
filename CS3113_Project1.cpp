@@ -3,8 +3,7 @@
 #include <string>
 #include <sstream>
 #include <queue>
-#include <limits>
-#include <ctime> // for the clock 
+#include <limits> 
 
 // ** Global variables **
 int CPU_clock = 0; // global variable to keep track of CPU clock cycles
@@ -18,7 +17,7 @@ int CPU_allocated_time = 5; // "                                      "
 * From the project description:
 * 1): CPU Time Allocation and Timeouts 
 *   • A new parameter, CPUAllocated, specifies the number of CPU ticks a process can execute 
-    before it times out. (DONE- need to pick them out of the file DIF: EASY)
+    before it times out. (DONE DIF: EASY)
 *   • If a process runs for more than CPUAllocated ticks without terminating or issuing an I/O 
     operation (e.g., a print statement), it will be interrupted. 
 *   • The process is then moved to the back of the ReadyQueue, and a message is printed 
@@ -77,7 +76,7 @@ void show_PCB(PCB process);
 
 void loadJobsToMemory(std::queue<PCB> &newJobQueue, std::queue<int> &readyQueue, std::vector<int> &mainMemory, int maxMemory);
 
-void executeCPU(int startAddress, std::vector<int> &mainMemory);
+void executeCPU(int startAddress, std::vector<int> &mainMemory, std::queue<int>& readyQueue);
 
 void show_main_memory(std::vector<int> &mainMemory, int rows);
 
@@ -94,6 +93,7 @@ int main(int argc, char** argv)
     std::vector<int> mainMemory;
     std::queue<int> readyQueue;
     std::queue<PCB> newJobQueue;
+    std::queue<PCB> IOWaitingQueue; // might need to be of another data type
 
     // read in data from file
     std::cin >> max_memory;
@@ -101,13 +101,15 @@ int main(int argc, char** argv)
     std::cin >> CPU_allocated_time;
     std::cin >> num_processes;
 
+    /*
     std::cout << "max memory: " << max_memory << std::endl;
     std::cout << "context switch time: " << context_switch_time << std::endl;
     std::cout << "CPU allocated time: " << CPU_allocated_time << std::endl;
     std::cout << "num processes: " << num_processes << std::endl;
+    */
     
 
-    /* mainMemory.resize(max_memory, -1); // initialize main memory with -1 with size of maxMemory
+    mainMemory.resize(max_memory, -1); // initialize main memory with -1 with size of maxMemory
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // this ignores any extra characters in the buffer namely the new line character, which would be picked up by the getline function in line 65
 
     /*
@@ -204,9 +206,8 @@ int main(int argc, char** argv)
     {
         int PCB_start_address = readyQueue.front();
         readyQueue.pop();
-        executeCPU(PCB_start_address, mainMemory);
+        executeCPU(PCB_start_address, mainMemory, readyQueue);
     }
- 
 
     return 0;
 } // END OF MAIN
@@ -217,7 +218,7 @@ void show_PCB(PCB process)
     std::cout << "PROCESS ["<<process.process_id<<"] " << "maxMemoryNeeded: " << process.max_memory_needed << std::endl;
     std::cout << "num-instructions: " << process.instructions.size() << std::endl;
 
-    for (unsigned int i=0; i<process.instructions.size(); i++) 
+    for (unsigned int i = 0; i<process.instructions.size(); i++) 
     {
         std::vector<int> current_instruction = process.instructions[i];
 
@@ -305,7 +306,7 @@ void loadJobsToMemory(std::queue<PCB>& newJobQueue, std::queue<int>& readyQueue,
     } // END WHILE
 } // END FUNCTION
 
-void executeCPU(int startAddress, std::vector<int>&  mainMemory) 
+void executeCPU(int startAddress, std::vector<int>&  mainMemory, std::queue<int>& readyQueue) 
 {
     
     // pull metadata of PCB from main memory
@@ -401,11 +402,24 @@ void executeCPU(int startAddress, std::vector<int>&  mainMemory)
         {
             CPU_cycles_used += current_instruction_data[1];
             std::cout << "compute" << "\n";
+            CPU_clock += CPU_cycles_used;
+
+            if (CPU_cycles_used >= CPU_allocated_time) 
+            {
+                std::cout << "TimeOUT Interrupt" << "\n";
+                CPU_cycles_used = 0;
+                // move process to back of ready queue
+                mainMemory[startAddress + 1] = 0; // update state to ready
+                mainMemory[startAddress + 6] = CPU_cycles_used; // update cpu cycles used
+                readyQueue.push(startAddress); // push PCB to back of ready queue
+                break;
+            }
         }
         else if (current_op_code == 2) // PRINT
         {
             CPU_cycles_used += current_instruction_data[0];
             std::cout << "print" << "\n";
+            CPU_clock += 1;
         }
         else if (current_op_code == 3) // STORE
         {
@@ -421,7 +435,8 @@ void executeCPU(int startAddress, std::vector<int>&  mainMemory)
                 register_value = current_instruction_data[0];
                 std::cout << "store error!" << "\n";
             }
-            CPU_cycles_used++;
+            CPU_clock += 1;
+            CPU_cycles_used++; // THIS AND LOAD MAY BE WRONG
         }
         // LOAD
         else if (current_op_code == 4) 
@@ -436,6 +451,7 @@ void executeCPU(int startAddress, std::vector<int>&  mainMemory)
             {
                 std::cout << "load error!" << "\n";
             }
+            CPU_clock += 1;
             CPU_cycles_used++;
         }
         // invalid opcode
