@@ -408,6 +408,7 @@ void executeCPU(int startAddress, std::vector<int>&  mainMemory, std::queue<int>
             {
                 std::cout << "TimeOUT Interrupt" << "\n";
                 CPU_cycles_used = 0;
+
                 // move process to back of ready queue
                 mainMemory[startAddress + 1] = 0; // update state to ready
                 mainMemory[startAddress + 6] = CPU_cycles_used; // update cpu cycles used
@@ -420,6 +421,18 @@ void executeCPU(int startAddress, std::vector<int>&  mainMemory, std::queue<int>
             CPU_cycles_used += current_instruction_data[0];
             std::cout << "print" << "\n";
             CPU_clock += 1;
+
+            if(CPU_cycles_used >= CPU_allocated_time)
+            {
+                std::cout << "TimeOUT Interrupt" << "\n";
+                CPU_cycles_used = 0;
+
+                // move the process to the back of the ready queue
+                mainMemory[startAddress + 1] = 0;
+                mainMemory[startAddress + 6] = CPU_cycles_used;
+                readyQueue.push(startAddress);
+                break;
+            }
         }
         else if (current_op_code == 3) // STORE
         {
@@ -437,6 +450,18 @@ void executeCPU(int startAddress, std::vector<int>&  mainMemory, std::queue<int>
             }
             CPU_clock += 1;
             CPU_cycles_used++; // THIS AND LOAD MAY BE WRONG
+
+            if(CPU_cycles_used >= CPU_allocated_time)
+            {
+                std::cout << "TimeOUT Interrupt" << "\n";
+                CPU_cycles_used = 0;
+
+                // move the process to the back of the ready queue
+                mainMemory[startAddress + 1] = 0;
+                mainMemory[startAddress + 6] = CPU_cycles_used;
+                readyQueue.push(startAddress);
+                break;
+            }
         }
         // LOAD
         else if (current_op_code == 4) 
@@ -453,6 +478,18 @@ void executeCPU(int startAddress, std::vector<int>&  mainMemory, std::queue<int>
             }
             CPU_clock += 1;
             CPU_cycles_used++;
+
+            if(CPU_cycles_used >= CPU_allocated_time)
+            {
+                std::cout << "TimeOUT Interrupt" << "\n";
+                CPU_cycles_used = 0;
+
+                // move the process to the back of the ready queue
+                mainMemory[startAddress + 1] = 0;
+                mainMemory[startAddress + 6] = CPU_cycles_used;
+                readyQueue.push(startAddress);
+                break;
+            }
         }
         // invalid opcode
         else 
