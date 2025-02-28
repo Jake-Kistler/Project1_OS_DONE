@@ -5,7 +5,6 @@
 #include <queue>
 #include <limits>
 #include <fstream>
-#include <ctime> // For the global CPU clock if needed
 
 // ------------------------------------------------------------------
 // *** CHANGES FOR PROJECT 2 ***
@@ -40,19 +39,12 @@ struct PCB
 
     // For storing instructions read from input (not always required, but used for reference)
     std::vector<std::vector<int>> instructions;
-
-    // For logging
-    int time_entered_running = -1;
-    int time_terminated      = -1;
 };
 
 // ------------------------------------------------------------------
 // Function Prototypes
 // ------------------------------------------------------------------
-void loadJobsToMemory(std::queue<PCB> &newJobQueue,
-                      std::queue<int> &readyQueue,
-                      std::vector<int> &mainMemory,
-                      int maxMemory);
+void loadJobsToMemory(std::queue<PCB> &newJobQueue,std::queue<int> &readyQueue,std::vector<int> &mainMemory,int maxMemory);
 
 int executeCPU(int startAddress, std::vector<int> &mainMemory);
 
@@ -142,10 +134,11 @@ int main(int argc, char **argv)
     loadJobsToMemory(newJobQueue, readyQueue, mainMemory, max_memory);
 
     // Optional: show main memory to confirm
-    show_main_memory(mainMemory); // or the entire 'max_memory'
+    show_main_memory(mainMemory);
 
     // 5) Additional data structures for round-robin + IO queue
     std::queue<int> IOWaitingQueue;
+
     // For tracking the first time each PID enters running
     std::vector<int> startRunningTime(num_processes+1, -1);
 
@@ -157,11 +150,6 @@ int main(int argc, char **argv)
         {
             CPU_clock += context_switch_time;
 
-            std::cout << "CPU idle, checking IOWaitingQueue after " 
-                      << context_switch_time << " cycles\n";
-            fout << "CPU idle, checking IOWaitingQueue after " 
-                 << context_switch_time << " cycles\n";
-
             // Move everything from IO to ready (in a naive approach)
             while (!IOWaitingQueue.empty())
             {
@@ -170,10 +158,9 @@ int main(int argc, char **argv)
 
                 mainMemory[pcbAddr + 1] = 1; // ready
                 int pid = mainMemory[pcbAddr];
-                std::cout << "Process " << pid 
-                          << " completed I/O and is moved to ReadyQueue\n";
-                fout << "Process " << pid 
-                     << " completed I/O and is moved to ReadyQueue\n";
+
+                std::cout << "Process " << pid << " completed I/O and is moved to ReadyQueue\n";
+                fout << "Process " << pid << " completed I/O and is moved to ReadyQueue\n";
                 readyQueue.push(pcbAddr);
             }
             continue;
@@ -245,17 +232,13 @@ int main(int argc, char **argv)
             IOWaitingQueue.push(pcbStart);
         }
 
-        // (Optional) check if some IO jobs are ready to move back; 
-        // or do it only after the CPU becomes idle. Implementation varies.
     }
 
     // After all processes are done, we might add a final context switch time if required
     CPU_clock += context_switch_time;
 
-    std::cout << "All processes complete. Total CPU time used: "
-              << totalCPUtimeAllProcesses << std::endl;
-    fout      << "All processes complete. Total CPU time used: "
-              << totalCPUtimeAllProcesses << std::endl;
+    std::cout << "All processes complete. Total CPU time used: " << totalCPUtimeAllProcesses << std::endl;
+    fout << "All processes complete. Total CPU time used: " << totalCPUtimeAllProcesses << std::endl;
 
     return 0;
 }
@@ -353,8 +336,7 @@ int executeCPU(int startAddress, std::vector<int> &mainMemory)
             cpu_used++;
 
             int storeAddress = instruction_base + param2;
-            if (storeAddress >= instruction_base 
-                && storeAddress < (instruction_base + max_mem_needed))
+            if (storeAddress >= instruction_base && storeAddress < (instruction_base + max_mem_needed))
             {
                 mainMemory[storeAddress] = param1;
                 reg_value = param1;
@@ -375,8 +357,7 @@ int executeCPU(int startAddress, std::vector<int> &mainMemory)
             cpu_used++;
 
             int loadAddr = instruction_base + param1;
-            if (loadAddr >= instruction_base
-                && loadAddr < (instruction_base + max_mem_needed))
+            if (loadAddr >= instruction_base && loadAddr < (instruction_base + max_mem_needed))
             {
                 reg_value = mainMemory[loadAddr];
                 std::cout << "loaded\n";
@@ -390,10 +371,8 @@ int executeCPU(int startAddress, std::vector<int> &mainMemory)
         }
         else
         {
-            std::cout << "ERROR: invalid opcode " << opcode 
-                      << " in process " << pid << "\n";
-            fout << "ERROR: invalid opcode " << opcode 
-                 << " in process " << pid << "\n";
+            std::cout << "ERROR: invalid opcode " << opcode << " in process " << pid << "\n";
+            fout << "ERROR: invalid opcode " << opcode << " in process " << pid << "\n";
         }
 
         program_counter++;
@@ -429,10 +408,7 @@ int executeCPU(int startAddress, std::vector<int> &mainMemory)
 // loadJobsToMemory
 //   moves from newJobQueue => mainMemory => readyQueue
 // ------------------------------------------------------------------
-void loadJobsToMemory(std::queue<PCB> &newJobQueue,
-                      std::queue<int> &readyQueue,
-                      std::vector<int> &mainMemory,
-                      int maxMemory)
+void loadJobsToMemory(std::queue<PCB> &newJobQueue,std::queue<int> &readyQueue,std::vector<int> &mainMemory,int maxMemory)
 {
     int current_address = 0;
 
@@ -442,16 +418,15 @@ void loadJobsToMemory(std::queue<PCB> &newJobQueue,
         newJobQueue.pop();
 
         p.main_memory_base = current_address;
-        // Suppose first 10 cells for PCB
-        p.instruction_base = current_address + 10;
+       
+        p.instruction_base = current_address + 10; // PCB has 10 cells
+
         // data_base after instructions
-        p.data_base        = p.instruction_base + p.instructions.size();
+        p.data_base = p.instruction_base + p.instructions.size();
 
         // Write PCB to main memory
         mainMemory[current_address + 0] = p.process_id; // ID
         mainMemory[current_address + 1] = 1;            // state => READY by default
-        // For minimal changes, store program_counter as the instruction_base:
-        // or you can store 0 if you want. Adjust carefully to match your code’s usage.
         mainMemory[current_address + 2] = 0;            
         mainMemory[current_address + 3] = p.instruction_base; 
         mainMemory[current_address + 4] = p.data_base;
@@ -506,7 +481,6 @@ void loadJobsToMemory(std::queue<PCB> &newJobQueue,
 // ------------------------------------------------------------------
 void show_main_memory(const std::vector<int> &mainMemory)
 {
-    // Just prints up to 'rows' lines
     for (int i = 0;i < mainMemory.size(); i++)
     {
         std::cout << i << " : " << mainMemory[i] << std::endl;

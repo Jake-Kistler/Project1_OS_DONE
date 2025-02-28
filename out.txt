@@ -2058,14 +2058,12 @@ stored
 Process 1 has a TimeOUT interrupt and is moved to the ReadyQueue.
 Process 1 has moved to Running.
 Process 1 terminated. Entered running at: 5. Terminated at: 35. Total Execution Time: 30
-CPU idle, checking IOWaitingQueue after 5 cycles
 Process 2 completed I/O and is moved to ReadyQueue
 Process 2 has moved to Running.
 stored
 ERROR: invalid opcode 350 in process 2
 print
 Process 2 issued an IOInterrupt and is moved to IOWaitingQueue.
-CPU idle, checking IOWaitingQueue after 5 cycles
 Process 2 completed I/O and is moved to ReadyQueue
 Process 2 has moved to Running.
 Process 2 terminated. Entered running at: 20. Terminated at: 58. Total Execution Time: 38
